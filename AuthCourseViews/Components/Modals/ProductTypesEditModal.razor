@@ -1,0 +1,79 @@
+﻿@using eShopModel.Classes;
+@using AuthCourseViews.Misc;
+
+<div class="modal fade" tabindex="-1" id="productTypesEditModal">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				@if (formAction == FormAction.Update)
+				{
+					<h1 class="modal-title fs-5">Editar tipo de dispositivos</h1>
+				}
+				else
+				{
+					<h1 class="modal-title fs-5">Insertar tipo de dispositivos</h1>
+				}
+			</div>
+			<div class="modal-body">
+				<EditForm Model="Data">
+					<div class="row">
+						<div class="col-md-6">
+							<div class="form-floating">
+								<InputTextArea class="form-control" id="nameFilter" @bind-Value="Data.Nombre"></InputTextArea>
+								<label class="form-label" for="#nameFilter">Nombre</label>
+							</div>
+						</div>
+					</div>
+				</EditForm>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+				@if (formAction == FormAction.Update)
+				{
+					<button type="button" class="btn btn-primary" @onclick="() => UpdateEventCallback.InvokeAsync(Data)">Actualizar</button>
+				}
+				else
+				{
+					<button type="button" class="btn btn-primary" @onclick="() => InsertEventCallback.InvokeAsync(Data)">Insertar</button>
+				}
+			</div>
+		</div>
+	</div>
+</div>
+
+
+
+@code {
+
+	public TipoProducto Data { get; set; } = new TipoProducto();
+
+	[Parameter]
+	[EditorRequired]
+	public EventCallback<TipoProducto> InsertEventCallback { get; set; }
+
+	[Parameter]
+	[EditorRequired]
+	public EventCallback<TipoProducto> UpdateEventCallback { get; set; }
+
+	private FormAction formAction = FormAction.Insert;
+
+	public void SetupInsertionMode()
+	{
+
+		formAction = FormAction.Insert;
+
+		Data = new TipoProducto();
+
+	}
+
+	public void SetupUpdateMode(TipoProducto data)
+	{
+
+		formAction = FormAction.Update;
+
+		Data.Id = data.Id;
+		Data.Nombre = data.Nombre;
+
+	}
+
+}

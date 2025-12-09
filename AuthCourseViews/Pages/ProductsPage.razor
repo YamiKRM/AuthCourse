@@ -1,0 +1,192 @@
+﻿@page "/products"
+
+@using eShopModel.Classes;
+@using AuthCourseViews.Components.Modals;
+@using AuthCourseViews.Components.Generic;
+@using AuthCourseViews.Services.Repository;
+@using Microsoft.AspNetCore.Authorization;
+
+@inject IDataRepository repoService;
+@inject SweetAlertService swalService;
+
+@attribute [Authorize(Roles = "supervisor,admin")]
+
+<div class="container-fluid">
+	<div class="card mx-auto card-align">
+		<div class="card-header card-header-primary">
+			<h3 class="card-title pt-2 text-center">Productos</h3>
+		</div>
+		<div class="card-body">
+			<h4 class="card-subtitle">Acciones</h4>
+			<button class="btn btn-primary btn-lg ml-2 mt-2" type="button" data-bs-toggle="modal" data-bs-target="#productsEditModal" @onclick="() => EditModal.SetupInsertionMode()">Insertar</button>
+			<hr class="separator" />
+
+			<div class="mt-2">
+				<DataView Data="Productos">
+					<Loading>
+						<div class="container text-center">
+							<img class="img-fluid" height="10%" width="10%" src="img/loading.gif" />
+						</div>
+					</Loading>
+					<NoRecords>
+						<h3>No hay registros para mostrar</h3>
+					</NoRecords>
+					<Content>
+
+						<div class="table-responsive">
+							<table class="table table-bordered table-sm table-hover">
+								<thead>
+									<tr>
+										<th scope="col">Id</th>
+										<th scope="col">Nombre</th>
+										<th scope="col">Descripción</th>
+										<th scope="col">Id Tipo</th>
+										<th scope="col">Pecio</th>
+										<th scope="col">Acciones</th>
+									</tr>
+								</thead>
+								<tbody>
+									@foreach (var product in Productos)
+									{
+										<tr>
+											<td>@product.Id</td>
+											<td>@product.Nombre</td>
+											<td>@product.Descripcion</td>
+											<td>@product.Tipo</td>
+											<td>@product.Precio</td>
+											<td>
+												<button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#productsEditModal" @onclick="() => EditModal.SetupUpdateMode(product)">Editar</button>
+											</td>
+										</tr>
+									}
+								</tbody>
+							</table>
+						</div>
+					</Content>
+				</DataView>
+			</div>
+
+		</div>
+		<div class="card-footer">
+		</div>
+	</div>
+</div>
+
+<ProductsEditModal @ref="EditModal" InsertEventCallback="InsertProduct" UpdateEventCallback="UpdateProduct"/>
+
+@code {
+
+	private List<Producto> Productos { get; set; } = new List<Producto>();
+
+	private ProductsEditModal EditModal { get; set; } = null!;
+
+	protected override async Task OnInitializedAsync()
+	{
+		await Task.WhenAll(GetProducts(), GetProductTypes());
+	}
+
+	private async Task GetProductTypes()
+	{
+
+		var response = await repoService.GetAsync<List<TipoProducto>>("/ProductTypes/GetAll");
+
+		if (response.StatusCode != System.Net.HttpStatusCode.OK)
+		{
+
+			await swalService.FireAsync(title: "Error", message: "Ha ocurrido un error al obtener los tipos de productos.", icon: SweetAlertIcon.Error);
+			return;
+
+		}
+
+		EditModal.ProductTypes = response.ResponseData;
+
+	}
+
+	private async Task GetProducts()
+	{
+
+		var response = await repoService.GetAsync<List<Producto>>("/Products/GetAll");
+
+		if (response.StatusCode != System.Net.HttpStatusCode.OK)
+		{
+
+			await swalService.FireAsync(title: "Error", message: "Ha ocurrido un error al obtener los productos.", icon: SweetAlertIcon.Error);
+			return;
+
+		}
+
+		Productos = response.ResponseData;
+
+	}
+
+	private async Task InsertProduct(Producto data)
+	{
+
+		var response = await repoService.PostAsync<Producto>(data, "/Products/Insert");
+
+		if (response.StatusCode != System.Net.HttpStatusCode.OK)
+		{
+
+			await swalService.FireAsync(title: "Error", message: "Ha ocurrido un error al insertar el producto.", icon: SweetAlertIcon.Error);
+			return;
+
+		}
+
+		await swalService.FireAsync(title: "Éxito", message: "El producto ha sido insertado con éxito.", icon: SweetAlertIcon.Success);
+
+		await GetProducts();
+
+	}
+
+	private async Task UpdateProduct(Producto data)
+	{
+
+		var response = await repoService.PutAsync<Producto>(data, "/Products/Update");
+
+		if (response.StatusCode != System.Net.HttpStatusCode.OK)
+		{
+
+			await swalService.FireAsync(title: "Error", message: "Ha ocurrido un error al actualizar el producto.", icon: SweetAlertIcon.Error);
+			return;
+
+		}
+
+		await swalService.FireAsync(title: "Éxito", message: "El producto ha sido actualizado con éxito.", icon: SweetAlertIcon.Success);
+
+		await GetProducts();
+
+	}
+
+	private async Task DeleteProduct(int id)
+	{
+
+		var swalResponse = await swalService.Mixin(new SweetAlertOptions
+		{
+
+			Title = "Confirmación",
+			Html = "¿Deseas eliminar este registro?",
+			ShowConfirmButton = true,
+			ShowCancelButton = true
+
+		}).FireAsync();
+
+		if (!swalResponse.IsConfirmed)
+			return;
+
+		var response = await repoService.DeleteAsync($"/ProductTypes/Delete?id={id}");
+
+		if (response.StatusCode != System.Net.HttpStatusCode.OK)
+		{
+
+			await swalService.FireAsync(title: "Error", message: "Ha ocurrido un error al eliminar el producto.", icon: SweetAlertIcon.Error);
+			return;
+
+		}
+
+		await swalService.FireAsync(title: "Éxito", message: "El producto ha sido eliminado con éxito", icon: SweetAlertIcon.Success);
+
+		await GetProducts();
+
+	}
+
+}

@@ -1,0 +1,110 @@
+﻿@using eShopModel.Classes;
+@using AuthCourseViews.Misc;
+
+<div class="modal fade" tabindex="-1" id="productsEditModal">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				@if (formAction == FormAction.Update)
+				{
+					<h1 class="modal-title fs-5">Editar tipo de dispositivos</h1>
+				}
+				else
+				{
+					<h1 class="modal-title fs-5">Insertar tipo de dispositivos</h1>
+				}
+			</div>
+			<div class="modal-body">
+				<EditForm Model="Data">
+					<div class="row">
+						<div class="col-md-3">
+							<div class="form-floating">
+								<InputText class="form-control" id="nameFilter" @bind-Value="Data.Nombre"></InputText>
+								<label class="form-label" for="#nameFilter">Nombre</label>
+							</div>
+						</div>
+						<div class="col-md-3">
+							<div class="form-floating">
+								<InputSelect class="form-select" @bind-Value="Data.Tipo">
+									@foreach(var type in ProductTypes)
+									{
+										<option value="@type.Id">@type.Nombre</option>
+									}
+								</InputSelect>
+								<label class="form-label" for="#nameFilter">Tipo de producto</label>
+							</div>
+						</div>
+						<div class="col-md-3">
+							<div class="form-floating">
+								<InputNumber class="form-control" id="nameFilter" @bind-Value="Data.Precio"></InputNumber>
+								<label class="form-label" for="#nameFilter">Precio</label>
+							</div>
+						</div>
+					</div>
+					<div class="row mt-2">
+						<div class="col-md-6">
+							<div class="form-floating">
+								<InputTextArea class="form-control" id="nameFilter" @bind-Value="Data.Descripcion"></InputTextArea>
+								<label class="form-label" for="#nameFilter">Descripción</label>
+							</div>
+						</div>
+					</div>
+				</EditForm>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+				@if (formAction == FormAction.Update)
+				{
+					<button type="button" class="btn btn-primary" @onclick="() => UpdateEventCallback.InvokeAsync(Data)">Actualizar</button>
+				}
+				else
+				{
+					<button type="button" class="btn btn-primary" @onclick="() => InsertEventCallback.InvokeAsync(Data)">Insertar</button>
+				}
+			</div>
+		</div>
+	</div>
+</div>
+
+
+
+@code {
+
+	public Producto Data { get; set; } = new Producto();
+
+	public List<TipoProducto> ProductTypes { get; set; } = new List<TipoProducto>();
+
+	[Parameter]
+	[EditorRequired]
+	public EventCallback<Producto> InsertEventCallback { get; set; }
+
+	[Parameter]
+	[EditorRequired]
+	public EventCallback<Producto> UpdateEventCallback { get; set; }
+
+	private FormAction formAction = FormAction.Insert;
+
+	public void SetupInsertionMode()
+	{
+
+		formAction = FormAction.Insert;
+
+		Data = new Producto();
+
+	}
+
+	public void SetupUpdateMode(Producto data)
+	{
+
+		formAction = FormAction.Update;
+
+		Data.Id = data.Id;
+		Data.Nombre = data.Nombre;
+		Data.Descripcion = data.Descripcion;
+		Data.Tipo = data.Tipo;
+		Data.Precio = data.Precio;
+
+	}
+
+}
+

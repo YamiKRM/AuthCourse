@@ -1,0 +1,46 @@
+﻿@typeparam TItem
+
+@if (Data is null)
+{
+    @if (Loading is null)
+    {
+
+    }
+    else
+    {
+        @Loading
+    }
+}
+else if (Data.Count == 0)
+{
+    @if (NoRecords is null)
+    {
+        <p>No hay registros para mostrar...</p>
+    }
+    else
+    {
+        @NoRecords
+    }
+}
+else
+{
+    @Content
+}
+
+@code {
+
+    [Parameter]
+    public RenderFragment? Loading { get; set; }
+
+    [Parameter]
+    public RenderFragment? NoRecords { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public RenderFragment Content { get; set; } = null!;
+
+    [Parameter]
+    [EditorRequired]
+    public List<TItem> Data { get; set; } = null!;
+
+}

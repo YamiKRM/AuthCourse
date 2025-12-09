@@ -1,0 +1,67 @@
+﻿@page "/LogIn"
+
+@using System.Net;
+@using eShopModel.Classes;
+@using AuthCourseViews.Services.Repository;
+@using AuthCourseViews.Services.Auth;
+
+@inject IDataRepository repoService;
+@inject ILoginService loginService;
+@inject SweetAlertService swalService;
+@inject NavigationManager navManager;
+
+<div class="container-fluid">
+    <div class="card mx-auto card-align-sm">
+        <div class="card-header">
+            <h3 class="card-title text-center">Iniciar sesión</h3>
+        </div>
+        <div class="card-body">
+
+            <EditForm Model="@LoginData">
+                <DataAnnotationsValidator />
+
+                <div class="row m-2">
+                    <label class="form-label">Correo</label>
+                    <InputText class="form-control" placeholder="ejemplo@correo.itm.edu.co" @bind-Value="@LoginData.Email"></InputText>
+                    <ValidationMessage For="() => LoginData.Email"></ValidationMessage>
+                </div>
+
+                <div class="row m-2">
+                    <label class="form-label">Contraseña</label>
+                    <InputText class="form-control" type="password" @bind-Value="@LoginData.Contraseña"></InputText>
+                </div>
+
+            </EditForm>
+
+        </div>
+        <div class="card-footer">
+            <button type="submit" class="btn btn-primary" onclick="@SignIn">Iniciar sesión</button>
+        </div>
+    </div>
+</div>
+
+@code {
+
+    private LoginDTO LoginData { get; set; } = new LoginDTO();
+
+    private async Task SignIn()
+    {
+
+        var response = await repoService.PostAsync<LoginDTO, TokenDTO>(LoginData, "/Auth/LogIn");
+
+        if (response.StatusCode != HttpStatusCode.OK)
+        {
+
+            await swalService.FireAsync(title: "Error", message: "Usuario o contraseña incorrecta.", icon: SweetAlertIcon.Error);
+
+            return;
+
+        }
+
+        await loginService.LogIn(response.ResponseData.Token);
+
+        navManager.NavigateTo("/");
+
+    }
+
+}
